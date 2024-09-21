@@ -53,6 +53,7 @@ python evaluation.py \
   - Which layers should i apply to LLama for LoRA Adaption
   - Which optimizer should i use for Finetuning phase
   - My student training phase is not good, add Scheduler.
-  - Following student/train.py and teacher/finetune.py file and generate evaluation.py file for me. Note that cause this is classification task, Accuracy, Precision, Recall, F1 implementation is necessary 
+  - Following student/train.py and teacher/finetune.py file and generate evaluation.py file for me. Note that cause this is classification task, Accuracy, Precision, Recall, F1 implementation is necessary
+  - What do the two identical values of accuracy and recall indicate?
 
 
