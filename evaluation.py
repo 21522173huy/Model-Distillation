@@ -1,5 +1,3 @@
-%%writefile evaluation.py
-
 from torch import nn, optim
 from tqdm import tqdm
 from student.dataset_ import create_dataloaders
