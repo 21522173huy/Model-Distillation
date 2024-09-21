@@ -88,6 +88,7 @@ def main():
   
     parser = argparse.ArgumentParser()
     parser.add_argument('--teacher_checkpoint', type=str)
+    parser.add_argument('--epochs', type=int)
     args = parser.parse_args()
     print(f'Teacher Checkpoint: {args.teacher_checkpoint}')
     # Load training configurations from a YAML file
@@ -120,7 +121,7 @@ def main():
     )
 
     optimizer = torch.optim.AdamW(student_model.parameters())
-    distill(pretrained_teacher_model, student_model, train_dataloader, optimizer, epochs = 2)
+    distill(pretrained_teacher_model, student_model, train_dataloader, optimizer, epochs = args.epochs)
 
 if __name__ == "__main__":
     main()
