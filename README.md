@@ -13,6 +13,7 @@
 ```
 git clone -b master https://github.com/21522173huy/Model-Distillation.git
 cd Model-Distillation
+pip install -r requirements.txt
 ```
 ### Enviroments Variables
 ```
