@@ -1,6 +1,8 @@
+%%writefile evaluation.py
+
 from torch import nn, optim
 from tqdm import tqdm
-from dataset_ import create_dataloaders
+from student.dataset_ import create_dataloaders
 from peft import get_peft_model, LoraConfig, TaskType, PeftModel
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, BitsAndBytesConfig
 import os
@@ -11,14 +13,12 @@ import torch
 import json
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
-# Add the parent directory to the system path to allow imports from the teacher subfolder
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from teacher.teacher_model import TeacherModel
 
 
 def evaluate_models(teacher_model, student_model, val_dataloader, save_path='evaluation_results.json'):
     teacher_model.eval()
-    student_model.eval()
+    student_model.eval(), student_model.to('cuda')
     
     teacher_predictions = []
     student_predictions = []
