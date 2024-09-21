@@ -43,8 +43,8 @@ python evaluation.py \
 ### Results
 |  Model | Params |Accuracy | Precision | Recall | F1 |
 | -------- | ------- |------- | -------- |-------- |-------- |
-| Teacher  | 6.74B |-------- |-------- |-------- |--------
-| Student  |  125M |--------| --------  |-------- |-------- |
+| Teacher  | 6.74B | 22.66% |64.06% |22.66%  |18.21%
+| Student  |  125M |38.66%| 14.95%  |38.66% |21.56% |
 
 
 ## AI used
@@ -53,5 +53,6 @@ python evaluation.py \
   - Which layers should i apply to LLama for LoRA Adaption
   - Which optimizer should i use for Finetuning phase
   - My student training phase is not good, add Scheduler.
+  - Following student/train.py and teacher/finetune.py file and generate evaluation.py file for me. Note that cause this is classification task, Accuracy, Precision, Recall, F1 implementation is necessary 
 
 
