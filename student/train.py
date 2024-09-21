@@ -1,5 +1,3 @@
-
-import torch
 from torch import nn, optim
 from tqdm import tqdm
 from dataset_ import create_dataloaders
@@ -9,6 +7,7 @@ import os
 import yaml
 import sys 
 import argparse
+import torch
 
 # Add the parent directory to the system path to allow imports from the teacher subfolder
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -16,8 +15,10 @@ from teacher.teacher_model import TeacherModel
 
 def distill(teacher_model, student_model, dataloader,
             optimizer, 
-            criterion=nn.KLDivLoss(reduction='batchmean'), 
+            ce_loss=nn.CrossEntropyLoss(),
             temperature=2.0, 
+            soft_target_loss_weight=0.5,
+            ce_loss_weight=0.5,
             epochs=10, 
             max_grad_norm=1.0,
             save_dir='student/student_checkpoints'):
@@ -28,6 +29,8 @@ def distill(teacher_model, student_model, dataloader,
     # Ensure the save directory exists
     os.makedirs(save_dir, exist_ok=True)
 
+    teacher_model.to('cuda')  # Move teacher model to GPU
+
     for epoch in tqdm(range(epochs)):
         total_loss = 0
         correct_predictions = 0
@@ -37,24 +40,32 @@ def distill(teacher_model, student_model, dataloader,
         student_model.train()  # Set student model to training mode
         student_model.to('cuda')  # Move student model to GPU
 
-        for batch in tqdm(dataloader):  # Iterate over the data
+        for batch in dataloader:  # Iterate over the data
             optimizer.zero_grad()  # Zero the gradients
             input_ids, attention_mask = batch['input_ids'].to('cuda'), batch['attention_mask'].to('cuda')
             labels = batch['labels'].to('cuda')
 
             # Predictions from the teacher model
             with torch.no_grad():
-                teacher_outputs = teacher_model(input_ids, attention_mask=attention_mask)
+                teacher_logits = teacher_model(input_ids, attention_mask=attention_mask).logits
 
             # Predictions from the student model
-            student_outputs = student_model(input_ids, attention_mask=attention_mask)
+            student_logits = student_model(input_ids, attention_mask=attention_mask).logits
 
-            # Compute the distillation loss
-            soft_targets = torch.softmax(teacher_outputs.logits / temperature, dim=1)
-            student_loss = criterion(torch.log_softmax(student_outputs.logits / temperature, dim=1), soft_targets)
+            # Soften the student logits by applying softmax first and log() second
+            soft_targets = nn.functional.softmax(teacher_logits / temperature, dim=-1)
+            soft_prob = nn.functional.log_softmax(student_logits / temperature, dim=-1)
 
-            # Backpropagation and optimization
-            student_loss.backward()
+            # Calculate the soft targets loss. Scaled by T**2 as suggested by the authors of the paper "Distilling the knowledge in a neural network"
+            soft_targets_loss = torch.sum(soft_targets * (soft_targets.log() - soft_prob)) / soft_prob.size()[0] * (temperature**2)
+
+            # Calculate the true label loss
+            label_loss = ce_loss(student_logits, labels)
+
+            # Weighted sum of the two losses
+            loss = soft_target_loss_weight * soft_targets_loss + ce_loss_weight * label_loss
+
+            loss.backward()
 
             # Clip gradients
             torch.nn.utils.clip_grad_norm_(student_model.parameters(), max_grad_norm)
@@ -62,10 +73,10 @@ def distill(teacher_model, student_model, dataloader,
             optimizer.step()
 
             # Accumulate loss
-            total_loss += student_loss.item()
+            total_loss += loss.item()
 
             # Calculate accuracy
-            predictions = torch.argmax(student_outputs.logits, dim=-1)
+            predictions = torch.argmax(student_logits, dim=-1)
             correct_predictions += (predictions == labels).sum().item()
             total_predictions += labels.size(0)
 
