@@ -3,3 +3,4 @@ bitsandbytes
 peft
 torch
 transformers
+unsloth
