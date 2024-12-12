@@ -6,25 +6,21 @@ from peft import get_peft_model, LoraConfig, TaskType
 from typing import Callable, Any, Tuple
 
 class TeacherModel:
-    def __init__(self, model_name: str, training_config):
+    def __init__(self, model_name: str, training_config, is_quantized=False):
+        print(f"Loading teacher model: {model_name}")
         self.model_name = model_name
         self.training_config = training_config
+        
         self.quantization_config = BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_compute_dtype=torch.float16,
-        )
-        self.teacher_model = self._load_teacher_model()
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        # self.tokenizer.pad_token = self.tokenizer.eos_token
-        self._ensure_padding_token()
-        self.teacher_model.config.pad_token_id = self.tokenizer.pad_token_id
+        ) if is_quantized else None
+
+        self = self._load_teacher_model()
         self.trainable = True  # Assuming the model is trainable
         self.load_in_nbits = 16  # Assuming 16-bit precision for fp16 training
 
-    def _ensure_padding_token(self):
-        if self.tokenizer.pad_token is None:
-            self.tokenizer.add_special_tokens({'pad_token': '[PAD]'})
-            self.teacher_model.resize_token_embeddings(len(self.tokenizer))
+        print("Teacher model loaded successfully")
 
     def _load_teacher_model(self):
         model = AutoModelForSequenceClassification.from_pretrained(

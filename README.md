@@ -4,9 +4,11 @@
 - Purpose: Observing approach that can help light-weight model outperforms LLMs in specific NLP task
 - Task: Sentiment Analysis
 - Dataset: `tweet_eval` with the configuration `sentiment` on HuggingFace
-- Teacher Model: Llama-2-7b-hf (6.74B)
-- Student Model: Roberta-Base (125M)
 - Source : Knowledge Distillation Tutorial (https://pytorch.org/tutorials/beginner/knowledge_distillation_tutorial.html)
+
+# Model Selection
+- Flan-T5: XXL and Small
+- Qwen: 7B and 0.5B
 
 ## Setting Up
 ### Installtion
